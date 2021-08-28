@@ -1,0 +1,46 @@
+#####Download the file 
+
+if(!file.exists("data")){
+  dir.create("data")
+}
+
+fileURL <- "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
+download.file(fileURL,destfile="./data/NEI_data.zip")
+
+####Unzip file 
+unzip(zipfile="./data/NEI_data.zip")
+
+####Read this Data
+
+NEI <- readRDS("C:\\Users\\Shivangi95\\Desktop\\SummarySCC_PM25.rds")
+SCC <- readRDS("C:\\Users\\Shivangi95\\Desktop\\Source_Classification_Code.rds")
+
+dir()
+
+####1.Have total emissions from PM2.5 decreased in the United States from 1999 to 2008?
+###Using the base plotting system, make a plot showing the total PM2.5 emission from all sources for each of the years 1999, 2002, 2005, and 2008.
+
+totalPM25BYyear <- tapply(NEI$Emission,NEI$year,sum)
+                          
+####plot 1
+
+plot(names(totalPM25BYyear),totalPM25BYyear,type = "l",
+     xlab="Year",ylab=expression("Total"~ PM[2.5]~ "Emission(tons)"),
+     main = expression("Total"~ PM[2.5] ~ "Emission by Year"))
+
+###Save plot as per PNG file 
+
+dev.copy(device = png,filename = 'Plot1.4.png',width = 673, height = 362)
+dev.copy()
+
+####Plot 2
+
+plot(names(totalPM25BYyear),totalPM25BYyear,type="l",
+     xlab="Year",ylab=expression("Total" ~ PM[2.5] ~ "Emission(tons)"),
+     main = expression("Total Baltimore city" ~ PM[2.5] ~ "Emission by year"))
+
+####Save Plot as PNG file
+
+# Copy Plot in png-file
+dev.copy(device = png, filename = 'plot2.png', width = 673, height = 362)
+dev.off ()
