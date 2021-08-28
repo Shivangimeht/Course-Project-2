@@ -1,0 +1,18 @@
+#####Download the file 
+
+if(!file.exists("data")){
+  dir.create("data")
+}
+
+fileURL <- "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
+download.file(fileURL,destfile="./data/NEI_data.zip")
+
+####Unzip file 
+unzip(zipfile="./data/NEI_data.zip")
+
+####Read this Data
+
+NEI <- readRDS("C:\\Users\\Shivangi95\\Desktop\\SummarySCC_PM25.rds")
+SCC <- readRDS("C:\\Users\\Shivangi95\\Desktop\\Source_Classification_Code.rds")
+
+dir()
