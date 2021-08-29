@@ -1,0 +1,161 @@
+#####Download the file 
+
+if(!file.exists("data")){
+  dir.create("data")
+}
+
+fileURL <- "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip"
+download.file(fileURL,destfile="./data/NEI_data.zip")
+
+####Unzip file 
+unzip(zipfile="./data/NEI_data.zip")
+
+####Read this Data
+
+NEI <- readRDS("C:\\Users\\Shivangi95\\Desktop\\SummarySCC_PM25.rds")
+SCC <- readRDS("C:\\Users\\Shivangi95\\Desktop\\Source_Classification_Code.rds")
+
+dir()
+
+####1.Have total emissions from PM2.5 decreased in the United States from 1999 to 2008?
+###Using the base plotting system, make a plot showing the total PM2.5 emission from all sources for each of the years 1999, 2002, 2005, and 2008.
+
+totalPM25BYyear <- tapply(NEI$Emission,NEI$year,sum)
+                          
+####plot 1
+
+plot(names(totalPM25BYyear),totalPM25BYyear,type = "l",
+     xlab="Year",ylab=expression("Total"~ PM[2.5]~ "Emission(tons)"),
+     main = expression("Total US"~ PM[2.5] ~ "Emission by Year"))
+
+###Save plot as per PNG file 
+
+dev.copy(device = png,filename = 'Plot1.4.png',width = 673, height = 362)
+dev.copy()
+
+#####2Have total emissions from PM2.5 decreased in the Baltimore City, Maryland (\color{red}{\verb|fips == "24510"|}fips == "24510") from 1999 to 2008?
+####Use the base plotting system to make a plot answering this question.
+
+####Plot 2
+
+plot(names(totalPM25BYyear),totalPM25BYyear,type="l",
+     xlab="Year",ylab=expression("Total" ~ PM[2.5] ~ "Emission(tons)"),
+     main = expression("Total Baltimore city" ~ PM[2.5] ~ "Emission by year"))
+
+####Save Plot as PNG file
+
+# Copy Plot in png-file
+dev.copy(device = png, filename = 'plot2.png', width = 673, height = 362)
+dev.off ()
+
+###fetch Baltimore Data 
+
+BaltimoreCity <- subset(NEI,fips == "24510")
+
+
+#####3.Of the four types of sources indicated by the \color{red}{\verb|type|}type (point, nonpoint, onroad, nonroad) variable, which of these four sources have seen decreases in emissions from 1999–2008 for Baltimore City? Which have seen increases in emissions from 1999–2008? 
+#####Use the ggplot2 plotting system to make a plot answer this question.
+
+####Calculate the sum of emission by Typetfor and year Baltimorecity
+
+class(type)
+
+typePMPM25ofBMar <- BaltimoreCity %>% select(year,type,Emissions) %>% 
+                    group_by(year,type) %>% 
+                    summarise_each(funs(sum))
+
+library(dplyr)
+library(ggplot2)
+
+class(typePMPM25ofBMar)
+
+typePMPM25ofBMar<- as.data.frame("typePMPM25ofBMar")
+
+is.data.frame(typePMPM25ofBMar)
+
+library(tidyverse)
+
+###plot 3
+
+Plot(typePMPM25ofBMar)
+
+qplot(year,Emissions, data = typePMPM25ofBMar, color = type, geom = "line") +
+  ggtitle(expression("Baltimore City" ~ PM[2.5] ~ "Emissions by Source Type and Year")) +
+  xlab("Year") +
+  ylab(expression("Total" ~ PM[2.5] ~ "Emissions (tons)"))
+
+# Copy Plot in png-file
+dev.copy(device = png, filename = 'plot3.png', width = 673, height = 362)
+dev.off ()
+
+####4.Across the United States, how have emissions from coal combustion-related sources changed from 1999–2008?
+
+#####Get information about coal combustion
+
+colnames(SCC)
+colnames(NEI)
+rownames(SCC)
+rownames(NEI)
+CoalCombustionSCC0 <- subset(SCC, EI.Sector %in% c("Fuel Comb - Comm/Instutional - Coal",
+                                                   "Fuel Comb - Electric Generation - Coal",
+                                                   "Fuel Comb - Industrial Boilers, ICEs - Coal"))
+CoalCombustionSCC1 <- subset(SCC, grepl("Comb", Short.Name) & 
+                               grepl("Coal", Short.Name))
+print(paste("Number of subsetted lines via EI.Sector:", nrow(CoalCombustionSCC0)))
+print(paste("Number of subsetted lines via Short.Name:", nrow(CoalCombustionSCC1)))
+
+####Differences 
+
+
+diff0 <- setdiff(CoalCombustionSCC0$SCC, CoalCombustionSCC1$SCC)
+diff1 <- setdiff(CoalCombustionSCC1$SCC, CoalCombustionSCC0$SCC)
+
+print(paste("Number of setdiff (data via EI.Sector & Short.Name):", length(diff0)))
+print(paste("Number of setdiff (data via Short.Name & EI.Sector):", length(diff1)))
+
+###check the Union
+
+
+coalcombustionSCCcodes <- union(CoalCombustionSCC0$SCC, CoalCombustionSCC1$SCC)
+print(paste("Number of SCCs:", length(coalcombustionSCCcodes)))
+
+###Check NEI data from SCC
+
+coalcombustion <- subset(NEI,SCC %in% coalcombustionSSCcodes)
+
+####Sum of Emissions by Type and Year
+
+coalcombustionPM25BYYEAR <- coalcombustion %>% select(year,type,Emissions) %>%
+                                               group_by(year, type) %>% 
+                                               summarize_each(funs(sum))
+
+####Plot 4
+
+qplot(year, Emissions, data = coalcombustionPM25BYYEAR, color = type, geom = "line") + 
+  stat_summary(fun.y = "sum", fun.ymin = "sum", fun.ymax = "sum", color = "purple", aes(shape="total"), geom="line") +
+  # geom_line(aes(size="total", shape = NA, col = "purple")) + 
+  ggtitle(expression("Coal Combustion" ~ PM[2.5] ~ "Emissions by Source Type and Year")) + 
+  xlab("Year") + 
+  ylab(expression  ("Total" ~ PM[2.5] ~ "Emissions (tons)"))
+
+# Copy Plot in png-file
+dev.copy(device = png, filename = 'plot4.png', width = 673, height = 362)
+dev.off ()
+
+# Fetch data of BaltimoreCity and ON-ROAD
+BaltimoreCityMV <- subset(NEI, fips == "24510" & type=="ON-ROAD")
+
+# Calculate the sum of emission by year
+BaltimoreMVPM25ByYear <- BaltimoreCityMV %>% select (year, Emissions) %>% 
+                                             group_by(year) %>% 
+                                             summarise_each(funs(sum))
+
+# Plot the result
+qplot(year, Emissions, data=BaltimoreMVPM25ByYear, geom="line") +
+  ggtitle(expression("Baltimore City" ~ PM[2.5] ~ "Motor Vehicle Emissions by Year")) +
+  xlab("Year") + 
+  ylab(expression("Total" ~ PM[2.5] ~ "Emissions (tons)"))
+
+# Copy Plot in png-file
+dev.copy(device = png, filename = 'plot5.png', width = 500, height = 400)
+dev.off ()
